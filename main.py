@@ -2,8 +2,9 @@ import sys
 import pygame
 from alien import Alien
 from bullet import Bullet
-from settings import Settings
 from ship import Ship
+from settings import Settings
+from scoreboard import Scoreboard
 
 
 class AlienInvasion:
@@ -16,6 +17,7 @@ class AlienInvasion:
         self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
         pygame.display.set_caption("Minimum Alien Invasion Starter")
         self.ship = Ship(self)
+        self.scoreboard = Scoreboard(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
         self._create_fleet()
@@ -63,7 +65,13 @@ class AlienInvasion:
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
-        pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+        collisions = pygame.sprite.groupcollide(
+            self.bullets, self.aliens, True, True
+        )
+
+        for aliens_hit in collisions.values():
+            points = len(aliens_hit) * self.settings.alien_points
+            self.scoreboard.add_points(points)
         if not self.aliens:
             self.bullets.empty()
             self._create_fleet()
@@ -110,6 +118,7 @@ class AlienInvasion:
             bullet.draw_bullet()
         self.ship.blitme()
         self.aliens.draw(self.screen)
+        self.scoreboard.draw_score()
         pygame.display.flip()
 
     @staticmethod
