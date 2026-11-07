@@ -45,3 +45,30 @@ class Scoreboard:
         Draw the score onto the screen.
         """
         self.screen.blit(self.score_image, self.score_rect)
+
+    def draw_lives(self, lives):
+        lives_text = f"Lives: {lives}"
+
+        lives_image = self.font.render(
+            lives_text,
+            True,
+            self.text_color
+        )
+
+        lives_rect = lives_image.get_rect()
+        lives_rect.top = 20
+        lives_rect.left = 20
+
+        self.screen.blit(lives_image, lives_rect)
+
+    def draw_failed(self):
+        failed_image = self.font.render(
+            "GAME OVER",
+            True,
+            self.text_color
+        )
+
+        failed_rect = failed_image.get_rect()
+        failed_rect.center = self.screen_rect.center
+
+        self.screen.blit(failed_image, failed_rect)

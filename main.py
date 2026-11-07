@@ -18,6 +18,8 @@ class AlienInvasion:
         pygame.display.set_caption("Minimum Alien Invasion Starter")
         self.ship = Ship(self)
         self.scoreboard = Scoreboard(self)
+        self.lives_left = self.settings.ship_lives
+        self.game_active = True
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
         self._create_fleet()
@@ -25,9 +27,12 @@ class AlienInvasion:
     def run_game(self):
         while True:
             self._check_events()
-            self.ship.update()
-            self._update_bullets()
-            self._update_aliens()
+
+            if self.game_active:
+                self.ship.update()
+                self._update_bullets()
+                self._update_aliens()
+
             self._update_screen()
             self.clock.tick(60)
 
@@ -45,7 +50,7 @@ class AlienInvasion:
             self.ship.moving_right = True
         elif event.key == pygame.K_LEFT:
             self.ship.moving_left = True
-        elif event.key == pygame.K_SPACE:
+        elif event.key == pygame.K_SPACE and self.game_active:
             self._fire_bullet()
         elif event.key == pygame.K_q:
             self._quit_game()
@@ -80,10 +85,18 @@ class AlienInvasion:
         self._check_fleet_edges()
         self.aliens.update()
         if any(alien.rect.bottom >= self.screen.get_rect().bottom for alien in self.aliens.sprites()):
+            self.lives_left -= 1
+
+            if self.lives_left == 0:
+                self.game_active = False
+
             self.aliens.empty()
             self.bullets.empty()
             self.ship.centre_ship()
-            self._create_fleet()
+
+            if self.game_active:
+                self._create_fleet()
+            
 
     def _create_fleet(self):
         alien = Alien(self)
@@ -119,6 +132,11 @@ class AlienInvasion:
         self.ship.blitme()
         self.aliens.draw(self.screen)
         self.scoreboard.draw_score()
+        self.scoreboard.draw_lives(self.lives_left)
+
+        if not self.game_active:
+            self.scoreboard.draw_failed()
+
         pygame.display.flip()
 
     @staticmethod
