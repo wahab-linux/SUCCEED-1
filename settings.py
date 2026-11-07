@@ -24,7 +24,7 @@ class Settings:
         self.alien_width = 48
         self.alien_height = 32
         self.alien_color = (40, 150, 70)
-        self.alien_speed = 3.5
+        self.alien_speed = 3.6
         self.fleet_drop_speed = 12
         self.fleet_direction = 1
         self.alien_points = 50

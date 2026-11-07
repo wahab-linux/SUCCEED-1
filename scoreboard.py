@@ -72,3 +72,16 @@ class Scoreboard:
         failed_rect.center = self.screen_rect.center
 
         self.screen.blit(failed_image, failed_rect)
+
+    def draw_curr_wave(self, wave):
+        curr_wave_image = self.font.render(
+            f"Wave: {wave}",
+            True,
+            self.text_color
+        )
+
+        curr_wave_rect = curr_wave_image.get_rect()
+        curr_wave_rect.top = 20
+        curr_wave_rect.centerx = self.screen_rect.centerx
+
+        self.screen.blit(curr_wave_image, curr_wave_rect)

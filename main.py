@@ -14,12 +14,14 @@ class AlienInvasion:
         pygame.init()
         self.clock = pygame.time.Clock()
         self.settings = Settings()
+        self.start_alien_speed = self.settings.alien_speed
         self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
         pygame.display.set_caption("Minimum Alien Invasion Starter")
         self.ship = Ship(self)
         self.scoreboard = Scoreboard(self)
         self.lives_left = self.settings.ship_lives
         self.game_active = True
+        self.wave = 1
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
         self._create_fleet()
@@ -52,6 +54,8 @@ class AlienInvasion:
             self.ship.moving_left = True
         elif event.key == pygame.K_SPACE and self.game_active:
             self._fire_bullet()
+        elif event.key == pygame.K_r and not self.game_active:
+            self._reset()
         elif event.key == pygame.K_q:
             self._quit_game()
 
@@ -79,6 +83,8 @@ class AlienInvasion:
             self.scoreboard.add_points(points)
         if not self.aliens:
             self.bullets.empty()
+            self.wave += 1
+            self.settings.alien_speed *= 1.25
             self._create_fleet()
 
     def _update_aliens(self):
@@ -97,7 +103,6 @@ class AlienInvasion:
             if self.game_active:
                 self._create_fleet()
             
-
     def _create_fleet(self):
         alien = Alien(self)
         alien_width, alien_height = alien.rect.size
@@ -133,11 +138,32 @@ class AlienInvasion:
         self.aliens.draw(self.screen)
         self.scoreboard.draw_score()
         self.scoreboard.draw_lives(self.lives_left)
+        self.scoreboard.draw_curr_wave(self.wave)
 
         if not self.game_active:
             self.scoreboard.draw_failed()
 
         pygame.display.flip()
+
+    def _reset(self):
+        self.lives_left = self.settings.ship_lives
+        self.game_active = True
+        self.wave = 1
+
+        self.scoreboard.score = 0
+        self.scoreboard._prepare_score()
+
+        self.bullets.empty()
+        self.aliens.empty()
+
+        self.settings.fleet_direction = 1
+        self.settings.alien_speed = self.start_alien_speed
+
+        self.ship.centre_ship()
+        self.ship.moving_left = False
+        self.ship.moving_right = False
+
+        self._create_fleet()
 
     @staticmethod
     def _quit_game():
