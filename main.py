@@ -4,7 +4,7 @@ from alien import Alien
 from bullet import Bullet
 from settings import Settings
 from ship import Ship
-from scoreboard import Scoreboard
+
 
 class AlienInvasion:
     """Manage the minimum Alien Invasion starter game."""
@@ -16,7 +16,6 @@ class AlienInvasion:
         self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
         pygame.display.set_caption("Minimum Alien Invasion Starter")
         self.ship = Ship(self)
-        self.scoreboard = Scoreboard(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
         self._create_fleet()
@@ -59,39 +58,20 @@ class AlienInvasion:
         if len(self.bullets) < self.settings.bullets_allowed:
             self.bullets.add(Bullet(self))
 
-    def _update_bullets(self): # Updated this method so its much cleaner to read and to be able to adjust the diffcultiy more easier.
+    def _update_bullets(self):
         self.bullets.update()
-
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
+        pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+        if not self.aliens:
+            self.bullets.empty()
+            self._create_fleet()
 
-        collisions = pygame.sprite.groupcollide(
-            self.bullets,
-            self.aliens,
-            True,
-            True
-        )
-
-        aliens_destroyed = sum(
-            len(hit_aliens)
-            for hit_aliens in collisions.values()
-        )
-
-        if aliens_destroyed > 0:
-            points = aliens_destroyed * self.settings.alien_points
-            self.scoreboard.add_points(points)
-
-        if self._wave_cleared():
-            self._start_next_wave()
     def _update_aliens(self):
         self._check_fleet_edges()
         self.aliens.update()
-
-        if any(
-            alien.rect.bottom >= self.screen.get_rect().bottom
-            for alien in self.aliens.sprites()
-        ):
+        if any(alien.rect.bottom >= self.screen.get_rect().bottom for alien in self.aliens.sprites()):
             self.aliens.empty()
             self.bullets.empty()
             self.ship.centre_ship()
@@ -130,16 +110,8 @@ class AlienInvasion:
             bullet.draw_bullet()
         self.ship.blitme()
         self.aliens.draw(self.screen)
-        self.scoreboard.draw_score()
         pygame.display.flip()
 
-    def _wave_cleared(self): # This method is to check if the wave has finished or not, if so increase diffcultiy.
-        return len(self.aliens) == 0
-    
-    def _start_next_wave(self): # Here you can increase the diffcultiy.
-        self.bullets.empty()
-        self._create_fleet()
-    
     @staticmethod
     def _quit_game():
         pygame.quit()
