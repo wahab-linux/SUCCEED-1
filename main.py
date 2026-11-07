@@ -1,5 +1,7 @@
 import sys
 import pygame
+import json
+from pathlib import Path
 from alien import Alien
 from bullet import Bullet
 from ship import Ship
@@ -14,13 +16,19 @@ class AlienInvasion:
         pygame.init()
         self.clock = pygame.time.Clock()
         self.settings = Settings()
+        self.scores_path = Path(__file__).with_name("scores.json")
+
+        with self.scores_path.open("r", encoding="utf-8") as file:
+            self.records = json.load(file)
         self.start_alien_speed = self.settings.alien_speed
         self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
         pygame.display.set_caption("Minimum Alien Invasion Starter")
+        self.play_button_rect = pygame.Rect(0, 0, 200, 60)
+        self.play_button_rect.center = self.screen.get_rect().center
         self.ship = Ship(self)
         self.scoreboard = Scoreboard(self)
         self.lives_left = self.settings.ship_lives
-        self.game_active = True
+        self.game_active = False
         self.wave = 1
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
@@ -46,6 +54,11 @@ class AlienInvasion:
                 self._check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if not self.game_active and self.lives_left > 0:
+                        if self.play_button_rect.collidepoint(event.pos):
+                            self.game_active = True
 
     def _check_keydown_events(self, event):
         if event.key == pygame.K_RIGHT:
@@ -81,11 +94,20 @@ class AlienInvasion:
         for aliens_hit in collisions.values():
             points = len(aliens_hit) * self.settings.alien_points
             self.scoreboard.add_points(points)
+
+        if self.scoreboard.score > self.records["high_score"]:
+            self.records["high_score"] = self.scoreboard.score
+            self._record_progress()
         if not self.aliens:
             self.bullets.empty()
             self.wave += 1
+            if self.wave > self.records["top_wave"]:
+                self.records["top_wave"] = self.wave
+                self._record_progress()
             self.settings.alien_speed *= 1.25
             self._create_fleet()
+
+        
 
     def _update_aliens(self):
         self._check_fleet_edges()
@@ -130,6 +152,10 @@ class AlienInvasion:
             alien.rect.y += self.settings.fleet_drop_speed
         self.settings.fleet_direction *= -1
 
+    def _record_progress(self):
+        with self.scores_path.open("w", encoding="utf-8") as file:
+            json.dump(self.records, file, indent=4)
+
     def _update_screen(self):
         self.screen.fill(self.settings.bg_color)
         for bullet in self.bullets.sprites():
@@ -139,11 +165,32 @@ class AlienInvasion:
         self.scoreboard.draw_score()
         self.scoreboard.draw_lives(self.lives_left)
         self.scoreboard.draw_curr_wave(self.wave)
+        self.scoreboard.draw_records(self.records)
 
-        if not self.game_active:
+        if not self.game_active and self.lives_left == 0:
             self.scoreboard.draw_failed()
 
+        if not self.game_active and self.lives_left > 0:
+            self._draw_start_btn()
+
         pygame.display.flip()
+
+    def _draw_start_btn(self):
+        pygame.draw.rect(
+            self.screen,
+            (30, 90, 180),
+            self.play_button_rect,
+            border_radius=8
+        )
+
+        text = self.scoreboard.font.render(
+            "PLAY",
+            True,
+            (255, 255, 255)
+        )
+
+        text_rect = text.get_rect(center=self.play_button_rect.center)
+        self.screen.blit(text, text_rect)
 
     def _reset(self):
         self.lives_left = self.settings.ship_lives

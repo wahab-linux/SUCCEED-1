@@ -85,3 +85,25 @@ class Scoreboard:
         curr_wave_rect.centerx = self.screen_rect.centerx
 
         self.screen.blit(curr_wave_image, curr_wave_rect)
+
+    def draw_records(self, records):
+        high_score_image = self.font.render(
+            f"Best: {records['high_score']}",
+            True,
+            self.text_color
+        )
+
+        top_wave_image = self.font.render(
+            f"Best Wave: {records['top_wave']}",
+            True,
+            self.text_color
+        )
+
+        high_score_rect = high_score_image.get_rect()
+        high_score_rect.topright = (self.screen_rect.right - 20, 60)
+
+        top_wave_rect = top_wave_image.get_rect()
+        top_wave_rect.midtop = (self.screen_rect.centerx, 60)
+
+        self.screen.blit(high_score_image, high_score_rect)
+        self.screen.blit(top_wave_image, top_wave_rect)
