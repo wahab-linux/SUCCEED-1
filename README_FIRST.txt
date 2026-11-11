@@ -1,3 +1,5 @@
+Wahab Note: make clean slate on start
+
 MINIMUM ALIEN INVASION STARTER
 ==============================
 
